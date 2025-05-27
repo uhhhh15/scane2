@@ -1,0 +1,11 @@
+{
+    "display_name": "ST截图3.0",
+    "loading_order": 10,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "",
+    "version": "3.0.1",
+    "homePage": ""
+}
