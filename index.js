@@ -248,7 +248,7 @@ jQuery(async () => {
         saveSettingsDebounced(); // 持久化设置
 
         saveStatusEl.text("设置已保存!").css('color', '#4cb944').show();
-        setTimeout(() => saveStatusEl.hide(), 3000);
+        setTimeout(() => saveStatusEl.hide(), 1000);
 
         // 重新加载配置，以便立即应用到插件逻辑
         loadConfig();
@@ -304,15 +304,9 @@ jQuery(async () => {
         menuButton.classList.add('fa-solid', 'fa-camera', 'extensionsMenuExtension');
         menuButton.title = PLUGIN_NAME;
         menuButton.setAttribute('data-plugin-id', PLUGIN_ID);
-        menuButton.style.display = 'flex';
-        menuButton.style.alignItems = 'center';
-        
-        // 添加标题文本
-        const titleSpan = document.createElement('span');
-        titleSpan.textContent = '截图设置';
-        titleSpan.style.marginLeft = '5px';
-        titleSpan.style.fontSize = '0.9em';
-        menuButton.appendChild(titleSpan);
+
+        // 直接添加文本节点
+        menuButton.appendChild(document.createTextNode('截图设置'));
         
         // 添加点击事件处理器，打开自定义截图弹窗
         menuButton.addEventListener('click', () => {
@@ -372,7 +366,6 @@ jQuery(async () => {
             btn.style.margin = '8px 0';
             btn.style.borderRadius = '5px';
             btn.style.cursor = 'pointer';
-            btn.style.backgroundColor = '#3a3a3a';
             
             btn.innerHTML = `
                 <i class="fa-solid ${option.icon}" style="font-size: 1.2em;"></i>
@@ -1300,6 +1293,8 @@ function showSettingsPopup() {
     popup.style.width = '100%';
     popup.style.maxHeight = '80vh';
     popup.style.overflowY = 'auto';
+    popup.style.position = 'absolute'; // 修改为绝对定位，便于拖动
+    popup.style.cursor = 'move'; // 添加移动光标
     
     // 标题
     const title = document.createElement('h3');
@@ -1419,6 +1414,59 @@ function showSettingsPopup() {
     
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
+    
+    // 简单拖拽功能
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // 鼠标按下事件
+    popup.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - popup.getBoundingClientRect().left;
+        offsetY = e.clientY - popup.getBoundingClientRect().top;
+    });
+    
+    // 触摸开始事件
+    popup.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        offsetX = e.touches[0].clientX - popup.getBoundingClientRect().left;
+        offsetY = e.touches[0].clientY - popup.getBoundingClientRect().top;
+    }, {passive: false});
+    
+    // 鼠标移动事件
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        
+        popup.style.left = `${x}px`;
+        popup.style.top = `${y}px`;
+    });
+    
+    // 触摸移动事件
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        const x = e.touches[0].clientX - offsetX;
+        const y = e.touches[0].clientY - offsetY;
+        
+        popup.style.left = `${x}px`;
+        popup.style.top = `${y}px`;
+        
+        // 阻止页面滚动
+        e.preventDefault();
+    }, {passive: false});
+    
+    // 拖拽结束事件
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+    
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+    });
     
     // 点击空白区域关闭弹窗
     overlay.addEventListener('click', (e) => {
