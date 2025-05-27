@@ -304,6 +304,15 @@ jQuery(async () => {
         menuButton.classList.add('fa-solid', 'fa-camera', 'extensionsMenuExtension');
         menuButton.title = PLUGIN_NAME;
         menuButton.setAttribute('data-plugin-id', PLUGIN_ID);
+        menuButton.style.display = 'flex';
+        menuButton.style.alignItems = 'center';
+        
+        // 添加标题文本
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = '截图设置';
+        titleSpan.style.marginLeft = '5px';
+        titleSpan.style.fontSize = '0.9em';
+        menuButton.appendChild(titleSpan);
         
         // 添加点击事件处理器，打开自定义截图弹窗
         menuButton.addEventListener('click', () => {
