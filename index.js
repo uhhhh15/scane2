@@ -962,10 +962,14 @@ function addScreenshotButtonToMessage(messageElement) {
 
     // Define menu options for multi-message capture
     const menuOptions = [
+      { text: '截取前四条消息', action: 'prev4' },
+      { text: '截取前三条消息', action: 'prev3' },
       { text: '截取前两条消息', action: 'prev2' },
       { text: '截取前一条消息', action: 'prev1' },
       { text: '截取后一条消息', action: 'next1' },
-      { text: '截取后两条消息', action: 'next2' }
+      { text: '截取后两条消息', action: 'next2' },
+      { text: '截取后三条消息', action: 'next3' },
+      { text: '截取后四条消息', action: 'next4' }
     ];
 
     // Create menu items
@@ -1051,6 +1055,7 @@ function addScreenshotButtonToMessage(messageElement) {
 
     // 添加触摸事件支持
     screenshotButton.addEventListener('touchstart', (e) => {
+      // 移除 e.preventDefault() 或条件性调用
       isLongPress = false;
       pressTimer = setTimeout(() => {
         isLongPress = true;
@@ -1155,10 +1160,14 @@ async function captureMultipleMessagesFromContextMenu(currentMessageElement, act
         let startIndex = currentIndex;
         let endIndex = currentIndex;
         switch (action) {
+            case 'prev4': startIndex = Math.max(0, currentIndex - 4); break;
+            case 'prev3': startIndex = Math.max(0, currentIndex - 3); break;
             case 'prev2': startIndex = Math.max(0, currentIndex - 2); break;
             case 'prev1': startIndex = Math.max(0, currentIndex - 1); break;
             case 'next1': endIndex = Math.min(allMessages.length - 1, currentIndex + 1); break;
             case 'next2': endIndex = Math.min(allMessages.length - 1, currentIndex + 2); break;
+            case 'next3': endIndex = Math.min(allMessages.length - 1, currentIndex + 3); break;
+            case 'next4': endIndex = Math.min(allMessages.length - 1, currentIndex + 4); break;
             default: throw new Error(`未知多消息截图动作: ${action}`);
         }
 
@@ -1171,7 +1180,16 @@ async function captureMultipleMessagesFromContextMenu(currentMessageElement, act
 
         // Download the resulting image
         if (dataUrl) {
-            const actionTextMap = {'prev2':'前两条','prev1':'前一条','next1':'后一条','next2':'后两条'};
+            const actionTextMap = {
+                'prev4':'前四条',
+                'prev3':'前三条',
+                'prev2':'前两条',
+                'prev1':'前一条',
+                'next1':'后一条',
+                'next2':'后两条',
+                'next3':'后三条',
+                'next4':'后四条'
+            };
             const fileNameHint = `ST消息组_${actionTextMap[action] || action}`;
             downloadImage(dataUrl, currentMessageElement, fileNameHint);
             console.log(`[多消息截图 ctx menu h2c-pro v5] 截图成功 for ${action}`);
