@@ -1051,7 +1051,6 @@ function addScreenshotButtonToMessage(messageElement) {
 
     // 添加触摸事件支持
     screenshotButton.addEventListener('touchstart', (e) => {
-      e.preventDefault(); // 防止默认行为
       isLongPress = false;
       pressTimer = setTimeout(() => {
         isLongPress = true;
