@@ -40,7 +40,7 @@ const defaultSettings = {
     altButtonLocation: true,
     screenshotScale: 2.0,      // 提高到 2.0 以提供清晰度
     useForeignObjectRendering: true, // dom-to-image-more 也支持
-    imageTimeout: 5000,        // dom-to-image-more 支持 imageTimeout
+    imageTimeout: 4000,        // dom-to-image-more 支持 imageTimeout
     debugOverlay: true,        // 新增：是否显示进度遮罩层
     cacheBust: true,           // 新增：用于 dom-to-image-more 强制重新加载图片
     corsImg: {
