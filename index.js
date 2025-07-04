@@ -31,7 +31,7 @@ import {
 
 // 插件的命名空间，与 manifest.json 中的文件夹名称一致
 const PLUGIN_ID = 'scane2';
-const PLUGIN_NAME = 'html2canvas-pro';
+const PLUGIN_NAME = 'ST截图3.0';
 
 // 插件的默认设置
 const defaultSettings = {
