@@ -30,7 +30,7 @@ import {
 } from '../../../utils.js';
 
 // 插件的命名空间，与 manifest.json 中的文件夹名称一致
-const PLUGIN_ID = 'html2canvas-pro';
+const PLUGIN_ID = 'scane2';
 const PLUGIN_NAME = 'html2canvas-pro';
 
 // 插件的默认设置
