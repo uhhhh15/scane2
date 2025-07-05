@@ -30,8 +30,8 @@ import {
 } from '../../../utils.js';
 
 // 插件的命名空间，与 manifest.json 中的文件夹名称一致
-const PLUGIN_ID = 'scane2';
-const PLUGIN_NAME = 'ST截图3.0';
+const PLUGIN_ID = 'html2canvas-pro';
+const PLUGIN_NAME = 'html2canvas-pro';
 
 // 插件的默认设置
 const defaultSettings = {
@@ -43,7 +43,8 @@ const defaultSettings = {
     useForeignObjectRendering: false,
     letterRendering: true,    // 新增：关闭字形渲染提高文字渲染速度
     imageTimeout: 3000,        // 新增：缩短图像加载超时
-    debugOverlay: true         // 新增：是否显示进度遮罩层
+    debugOverlay: true,        // 新增：是否显示进度遮罩层
+    imageFormat: 'jpg'         // 新增：默认图片格式
 };
 
 // 全局配置对象，将从设置中加载
@@ -63,7 +64,8 @@ const config = {
         logging: false,        // 始终关闭日志以提高性能
         removeContainer: true
         // 其他选项会从 settings 加载，不要在这里硬编码
-    }
+    },
+    imageFormat: 'jpg'         // 新增：默认图片格式
 };
 
 // 确保插件设置已加载并与默认值合并
@@ -100,6 +102,9 @@ function loadConfig() {
     config.html2canvasOptions.letterRendering = settings.letterRendering !== undefined ?
         settings.letterRendering : defaultSettings.letterRendering;
     config.html2canvasOptions.imageTimeout = settings.imageTimeout || defaultSettings.imageTimeout;
+
+    // 加载图片格式设置
+    config.imageFormat = settings.imageFormat || defaultSettings.imageFormat;
 
     console.log(`${PLUGIN_NAME}: 配置已加载并应用:`, config);
 }
@@ -242,6 +247,13 @@ jQuery(async () => {
               <input type="checkbox" id="st_h2c_debugOverlay" ${defaultSettings.debugOverlay ? 'checked' : ''}>
               <label for="st_h2c_debugOverlay">显示调试覆盖层</label>
             </div>
+            <div class="option">
+              <label for="st_h2c_imageFormat">图片格式:</label>
+              <select id="st_h2c_imageFormat">
+                <option value="jpg" ${config.imageFormat === 'jpg' ? 'selected' : ''}>JPG</option>
+                <option value="png" ${config.imageFormat === 'png' ? 'selected' : ''}>PNG</option>
+              </select>
+            </div>
 
             <button id="st_h2c_saveSettingsBtn" class="menu_button">保存设置</button>
             <div class="status-area" id="st_h2c_saveStatus" style="display:none;"></div>
@@ -265,6 +277,7 @@ jQuery(async () => {
     const captureLastMsgBtn = settingsForm.find('#st_h2c_captureLastMsgBtn');
     const letterRenderingEl = settingsForm.find('#st_h2c_letterRendering');
     const debugOverlayEl = settingsForm.find('#st_h2c_debugOverlay');
+    const imageFormatSelect = settingsForm.find('#st_h2c_imageFormat');
 
     function updateSettingsUI() {
         const settings = getPluginSettings();
@@ -277,6 +290,10 @@ jQuery(async () => {
         
         if (letterRenderingEl) letterRenderingEl.prop('checked', settings.letterRendering);
         if (debugOverlayEl) debugOverlayEl.prop('checked', settings.debugOverlay);
+        
+        if (imageFormatSelect.length) {
+            imageFormatSelect.val(settings.imageFormat || defaultSettings.imageFormat);
+        }
     }
 
     saveSettingsBtn.on('click', () => {
@@ -290,6 +307,7 @@ jQuery(async () => {
         settings.altButtonLocation = altButtonLocationEl.prop('checked');
         settings.letterRendering = letterRenderingEl.prop('checked');
         settings.debugOverlay = debugOverlayEl.prop('checked');
+        settings.imageFormat = $('#st_h2c_imageFormat').val();
 
         saveSettingsDebounced();
 
@@ -509,36 +527,51 @@ function prepareSingleElementForHtml2CanvasPro(originalElement) {
         }
     });
 
-    function syncDetailsState(origNode, cloneNode) {
-        if (!origNode || !cloneNode) return;
-        
-        if (origNode.tagName === 'DETAILS') {
-            const isOpen = origNode.hasAttribute('open');
-            
-            if (isOpen) {
-                cloneNode.setAttribute('open', '');
-            } else {
-                cloneNode.removeAttribute('open');
-                
-                Array.from(cloneNode.childNodes).forEach(child => {
-                    if (child.tagName && child.tagName !== 'SUMMARY') {
-                        cloneNode.removeChild(child);
-                    }
-                });
-            }
-        }
-        
-        const origChildren = origNode.children || [];
-        const cloneChildren = cloneNode.children || [];
-        
-        if (origChildren.length === cloneChildren.length) {
-            for (let i = 0; i < origChildren.length; i++) {
-                syncDetailsState(origChildren[i], cloneChildren[i]);
-            }
-        }
-    }
+    // 增强的details元素处理函数
+	function handleDetailsElements(origNode, cloneNode) {
+		if (!origNode || !cloneNode) return;
+		
+		// 递归处理子元素
+		const origChildren = origNode.children || [];
+		const cloneChildren = cloneNode.children || [];
+		
+		// 我们先递归，这样可以从最内层的details开始处理
+		const minLength = Math.min(origChildren.length, cloneChildren.length);
+		for (let i = 0; i < minLength; i++) {
+			handleDetailsElements(origChildren[i], cloneChildren[i]);
+		}
+
+		// 处理当前节点是否是details元素
+		if (origNode.tagName === 'DETAILS') {
+			console.log(`[FIX] 处理details元素，原始折叠状态:`, origNode.open);
+			
+			// 设置克隆元素的open状态与原始元素一致
+			if (origNode.open) {
+				cloneNode.setAttribute('open', '');
+			} else {
+				cloneNode.removeAttribute('open');
+				
+				// 如果是折叠状态，则移除summary之外的所有子节点
+				// 使用 childNodes 可以获取包括文本节点在内的所有子节点
+				const nodesToRemove = [];
+				cloneNode.childNodes.forEach(child => {
+					// 我们要保留 SUMMARY 标签
+					if (!(child.nodeType === Node.ELEMENT_NODE && child.tagName === 'SUMMARY')) {
+						nodesToRemove.push(child);
+					}
+				});
+
+				// 从DOM中移除这些节点
+				nodesToRemove.forEach(node => {
+					cloneNode.removeChild(node);
+				});
+				console.log(`[FIX] 已折叠，移除了 ${nodesToRemove.length} 个非summary子节点。`);
+			}
+		}
+	}
     
-    syncDetailsState(originalElement, element);
+    // 调用增强的details处理函数
+    handleDetailsElements(originalElement, element);
     
     element.style.display = 'block';
     element.style.visibility = 'visible';
@@ -546,9 +579,6 @@ function prepareSingleElementForHtml2CanvasPro(originalElement) {
     element.style.width = originalElement.offsetWidth + 'px';
     element.style.height = 'auto';
     element.style.overflow = 'visible';
-    
-    // ### FIX: Removed the debug border that adds unwanted pixels to the screenshot.
-    // element.style.border = '1px solid red';
     
     return element;
 }
@@ -702,7 +732,12 @@ async function captureElementWithHtml2Canvas(elementToCapture, h2cUserOptions = 
         });
         
         if (overlay) updateOverlay(overlay, '生成最终图像...', 0.9);
-        finalDataUrl = finalCanvas.toDataURL('image/png');
+        // 根据设置选择图片格式
+        if (config.imageFormat === 'jpg') {
+            finalDataUrl = finalCanvas.toDataURL('image/jpeg', 1.0); // JPG格式质量为1.0
+        } else {
+            finalDataUrl = finalCanvas.toDataURL('image/png');
+        }
 
     } catch (error) {
         console.error('截图流程失败:', error.stack || error);
@@ -817,7 +852,12 @@ async function captureMultipleMessagesWithHtml2Canvas(messagesToCapture, actionH
         const canvas = await html2canvas(tempContainer, finalH2cOptions);
 
         updateOverlay(overlay, '生成图像数据...', 0.8);
-        dataUrl = canvas.toDataURL('image/png');
+        // 根据设置选择图片格式
+        if (config.imageFormat === 'jpg') {
+            dataUrl = canvas.toDataURL('image/jpeg', 1.0); // JPG格式质量为1.0
+        } else {
+            dataUrl = canvas.toDataURL('image/png');
+        }
 
     } catch (error) {
         console.error('html2canvas-pro 多消息截图失败:', error.stack || error);
@@ -1196,10 +1236,12 @@ function downloadImage(dataUrl, messageElement = null, typeHint = 'screenshot') 
       filename += `_${new Date().toISOString().replace(/[:.TZ]/g, '-')}`;
     }
 
-    link.download = `${filename}.png`;
+    // 根据当前设置选择正确的文件扩展名
+    const fileExtension = config.imageFormat || 'jpg';
+    link.download = `${filename}.${fileExtension}`;
     link.href = dataUrl;
     link.click();
-    console.log(`Image downloaded as ${filename}.png`);
+    console.log(`Image downloaded as ${filename}.${fileExtension}`);
 }
 
 function createOverlay(message) {
@@ -1277,7 +1319,13 @@ function showSettingsPopup() {
         { id: 'autoInstallButtons', type: 'checkbox', label: '自动安装消息按钮' },
         { id: 'altButtonLocation', type: 'checkbox', label: '按钮备用位置' },
         { id: 'letterRendering', type: 'checkbox', label: '字形渲染' },
-        { id: 'debugOverlay', type: 'checkbox', label: '显示调试覆盖层' }
+        { id: 'debugOverlay', type: 'checkbox', label: '显示调试覆盖层' },
+        { id: 'imageFormat', type: 'select', label: '图片格式', 
+          options: [
+              { value: 'jpg', label: 'JPG' },
+              { value: 'png', label: 'PNG' }
+          ]
+        },
     ];
     
     settingsConfig.forEach(setting => {
@@ -1307,6 +1355,18 @@ function showSettingsPopup() {
             input.step = setting.step;
             input.value = settings[setting.id];
             input.style.width = '80px';
+        } else if (setting.type === 'select') {
+            input = document.createElement('select');
+            input.id = `st_setting_${setting.id}`;
+            setting.options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option.value;
+                optElement.textContent = option.label;
+                if (settings[setting.id] === option.value) {
+                    optElement.selected = true;
+                }
+                input.appendChild(optElement);
+            });
         }
         
         settingContainer.appendChild(input);
@@ -1339,31 +1399,28 @@ function showSettingsPopup() {
                 if (isNaN(settings[setting.id])) {
                     settings[setting.id] = defaultSettings[setting.id];
                 }
+            } else if (setting.type === 'select') {
+                settings[setting.id] = input.value;
             }
         });
         
         saveSettingsDebounced();
         loadConfig();
         
-        const statusMsg = document.createElement('div');
-        statusMsg.textContent = '设置已保存！';
-        statusMsg.style.color = '#4cb944';
-        statusMsg.style.textAlign = 'center';
-        statusMsg.style.marginTop = '10px';
-        buttonContainer.appendChild(statusMsg);
+        // 使用toastr显示成功消息
+        toastr.success('设置已保存！');
         
-        setTimeout(() => {
-            if (overlay.parentElement) {
-                document.body.removeChild(overlay);
-            }
-            
-            if (settings.autoInstallButtons) {
-                document.querySelectorAll(`.${config.buttonClass}`).forEach(btn => btn.remove());
-                installScreenshotButtons();
-            } else {
-                document.querySelectorAll(`.${config.buttonClass}`).forEach(btn => btn.remove());
-            }
-        }, 1500);
+        // 立即关闭UI面板
+        if (overlay.parentElement) {
+            document.body.removeChild(overlay);
+        }
+        
+        if (settings.autoInstallButtons) {
+            document.querySelectorAll(`.${config.buttonClass}`).forEach(btn => btn.remove());
+            installScreenshotButtons();
+        } else {
+            document.querySelectorAll(`.${config.buttonClass}`).forEach(btn => btn.remove());
+        }
     });
     
     buttonContainer.appendChild(saveButton);
