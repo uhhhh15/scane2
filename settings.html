@@ -19,9 +19,12 @@
       <label for="st_h2c_scrollDelay">UI更新等待 (ms):</label>
       <input type="number" id="st_h2c_scrollDelay" min="0" max="2000" step="50">
     </div>
-     <div class="option">
-      <label for="st_h2c_qualityDisplay">图片格式:</label>
-      <input type="text" value="PNG (无损)" readonly style="background-color: #222; border-color: #444; text-align: center;">
+    <div class="option">
+      <label for="st_h2c_imageFormat">图片格式:</label>
+      <select id="st_h2c_imageFormat">
+        <option value="jpg">JPG (更小体积)</option>
+        <option value="png">PNG (无损质量)</option>
+      </select>
     </div>
 
     <hr>
