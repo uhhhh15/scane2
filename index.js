@@ -905,6 +905,30 @@ async function captureElementWithHtml2Canvas(elementToCapture, h2cUserOptions = 
         if (overlay) updateOverlay(overlay, '正在处理内联框架(iframe)...', 0.25);
         await handleIframesAsync(tempContainer, elementToCapture.ownerDocument);
         await new Promise(resolve => setTimeout(resolve, Math.max(100, config.screenshotDelay)));
+		
+		captureLogger.info('[诊断] 正在注入极简安全样式以进行测试...');
+		try {
+			const safeStyle = document.createElement('style');
+			safeStyle.innerHTML = `
+				/* 强制覆盖所有子元素的颜色和字体，确保可见性 */
+				#${tempContainer.id}, #${tempContainer.id} * {
+					color: #000 !important; /* 强制黑色文字 */
+					background-color: transparent !important; /* 避免背景色覆盖 */
+					font-family: Arial, sans-serif !important; /* 使用最安全的系统字体 */
+					text-shadow: none !important;
+					-webkit-text-fill-color: initial !important; /* 重置 WebKit 特有属性 */
+					visibility: visible !important;
+					opacity: 1 !important;
+				}
+			`;
+			// 给临时容器一个唯一的ID，以便样式生效
+			tempContainer.id = `h2c-temp-container-${uuidv4()}`; 
+			tempContainer.appendChild(safeStyle);
+			captureLogger.success('[诊断] 极简安全样式注入成功');
+		} catch(e) {
+			captureLogger.error('[诊断] 注入安全样式时出错', e);
+		}
+		
         captureLogger.info(`[单元素截图] 延迟${Math.max(100, config.screenshotDelay)}ms后继续`);
 
         if (overlay) updateOverlay(overlay, '正在渲染场景(内容层)...', 0.4);
