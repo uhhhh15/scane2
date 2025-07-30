@@ -14,7 +14,7 @@ import {
 // --- 插件元数据 ---
 const PLUGIN_ID = 'modern-screenshot';
 const PLUGIN_NAME = 'modern-screenshot';
-const SCRIPT_VERSION = '2.0.7';
+const SCRIPT_VERSION = '3.0.0';
 
 // 日志系统
 const captureLogger = {
@@ -72,7 +72,7 @@ function markUpdateNoticeSeen() {
 
 // 自动更新检查器
 const updateChecker = {
-    GITHUB_REPO: 'yuncengfeihou/modern-screenshot',
+    GITHUB_REPO: 'uhhhh15/scane2',
     REMOTE_CHANGELOG_PATH: 'CHANGELOG.md',
     REMOTE_MANIFEST_PATH: 'manifest.json',
     remoteVersion: '0.0.0',
