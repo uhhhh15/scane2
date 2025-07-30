@@ -12,8 +12,8 @@ import {
 
 
 // --- 插件元数据 ---
-const PLUGIN_ID = 'modern-screenshot';
-const PLUGIN_NAME = 'modern-screenshot';
+const PLUGIN_ID = 'scane2';
+const PLUGIN_NAME = 'ST截图3.0';
 const SCRIPT_VERSION = '3.0.0';
 
 // 日志系统
@@ -383,7 +383,7 @@ const initSettingsUI = () => {
 
         if ($(`#${OVERLAY_ID}`).length === 0) {
             const helpContentHtml = `
-                <h4>酒馆截图插件 v2.0.7 使用说明</h4>
+                <h4>酒馆截图插件 v3.0.0 使用说明</h4>
                 
                 <h5>✨ 主要更新内容</h5>
                 <h6>核心优化与修复</h6>
